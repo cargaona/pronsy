@@ -16,10 +16,21 @@ type value struct {
 }
 
 type Cache struct {
-	ttl    time.Duration
-	mx     sync.RWMutex
-	logger proxy.Logger
-	items  map[string]value
+	enabled bool
+	ttl     time.Duration
+	mx      sync.Mutex
+	logger  proxy.Logger
+	items   map[string]value
+}
+
+func New(ttl time.Duration, logger proxy.Logger, enabled bool) proxy.Cache {
+	cache := &Cache{
+		ttl:     ttl,
+		items:   map[string]value{},
+		logger:  logger,
+		enabled: enabled,
+	}
+	return cache
 }
 
 func (c *Cache) AutoPurge() {
@@ -35,18 +46,13 @@ func (c *Cache) AutoPurge() {
 	}
 }
 
-func New(ttl time.Duration, logger proxy.Logger) proxy.Cache {
-	cache := &Cache{
-		ttl:    ttl,
-		items:  map[string]value{},
-		logger: logger,
-	}
-	return cache
-}
-
 func (c *Cache) Get(dnsm dnsmessage.Message) (*dnsmessage.Message, error) {
-	c.mx.RLock()
-	defer c.mx.RUnlock()
+	if !c.enabled {
+		c.logger.Info("Cache disabled. Not retrieving any data")
+		return nil, nil
+	}
+	c.mx.Lock()
+	defer c.mx.Unlock()
 	c.logger.Debug("Looking for record: %v \n", dnsm.Questions[0].Name)
 	if value, ok := c.items[hashKey(dnsm)]; ok {
 		c.logger.Debug("Found record: %v \n", dnsm.Questions[0].Name)
@@ -57,6 +63,10 @@ func (c *Cache) Get(dnsm dnsmessage.Message) (*dnsmessage.Message, error) {
 }
 
 func (c *Cache) Store(dnsm dnsmessage.Message) error {
+	if !c.enabled {
+		c.logger.Info("Cache disabled. Not saving any data.")
+		return nil
+	}
 	c.mx.Lock()
 	c.logger.Debug("Saving record: %v \n", dnsm.Questions[0].Name)
 	c.items[hashKey(dnsm)] = value{&dnsm, time.Now().Add(c.ttl)}

@@ -1,0 +1,66 @@
+package udp
+
+import (
+	"dns-proxy/pkg/domain/proxy"
+	"fmt"
+	"log"
+	"net"
+	"strconv"
+)
+
+type DNSServer struct {
+	proxySvc          proxy.Service
+	port              int
+	host              string
+	maxPoolConnection int
+	maxWorkers        int
+}
+
+func New(proxy proxy.Service, port int, host string, maxPoolConnection, maxWorkers int) *DNSServer {
+	return &DNSServer{
+		proxySvc:          proxy,
+		port:              port,
+		host:              host,
+		maxWorkers:        maxWorkers,
+		maxPoolConnection: maxPoolConnection,
+	}
+}
+
+type message struct {
+	addr   net.Addr
+	msg    []byte
+	length int
+	conn   *net.PacketConn
+}
+
+func (d *DNSServer) StartUDPServer() {
+	portStr := strconv.Itoa(d.port)
+	//TODO: Change this for a logger
+	fmt.Println("Listening UDP DNS Proxy on PORT " + portStr)
+	conn, err := net.ListenUDP(proxy.SocketUDP, &net.UDPAddr{Port: d.port})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	handleUDPpackages(conn, d.proxySvc)
+}
+
+func handleUDPpackages(conn *net.UDPConn, p proxy.Service) {
+	for {
+		unsolvedMsg := make([]byte, 2048)
+		n, addr, err := conn.ReadFromUDP(unsolvedMsg)
+		if err != nil {
+			log.Println("Failed to read from connection.")
+		}
+
+		solvedMsg, err := p.SolveUDP(unsolvedMsg[:n])
+		if err != nil {
+			fmt.Printf("Error solving message: %v \n", err)
+		}
+
+		_, err = conn.WriteToUDP(solvedMsg[:], addr)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}

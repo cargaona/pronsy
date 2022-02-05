@@ -6,12 +6,14 @@ import (
 )
 
 type Logger struct {
-	name string
+	name  string
+	debug bool
 }
 
-func New(loggerName string) *Logger {
+func New(loggerName string, debug bool) *Logger {
 	return &Logger{
-		name: fmt.Sprintf("[ %s ]", loggerName),
+		name:  fmt.Sprintf("[%s]", loggerName),
+		debug: debug,
 	}
 }
 
@@ -24,5 +26,7 @@ func (l *Logger) Err(format string, i ...interface{}) {
 }
 
 func (l *Logger) Debug(format string, i ...interface{}) {
-	log.Printf(l.name+" [DEBUG] "+format, i...)
+	if l.debug {
+		log.Printf(l.name+" [DEBUG] "+format, i...)
+	}
 }
