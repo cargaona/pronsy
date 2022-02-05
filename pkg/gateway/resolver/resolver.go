@@ -118,7 +118,7 @@ type resolver struct {
 }
 
 func NewResolver(ip string, port int, rto uint) proxy.Resolver {
-	return &resolver{ip, port, dnssb, rto}
+	return &resolver{ip, port, newCloudFlare, rto}
 }
 
 func (r *resolver) GetTLSConnection() (*tls.Conn, error) {

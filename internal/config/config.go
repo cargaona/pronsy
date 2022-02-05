@@ -11,11 +11,12 @@ import "github.com/kelseyhightower/envconfig"
 //const DNS_PROVIDER_HOST = "DNS_PROVIDER_HOST"
 
 type Specification struct {
-	Port           int
-	TcpMaxConnPool int
-	CacheTTL       int
-	ResolverReadTo uint
-	ProviderHost   string
+	Port            int
+	TcpMaxConnPool  int
+	CacheTTL        int
+	ResolverTimeOut uint
+	ProviderHost    string
+	ProviderPort    int
 }
 
 func GetConfig() (*Specification, error) {
