@@ -6,6 +6,7 @@ Google.
 
 ## Index
 - [Run It](#Test-it-yourself!)
+- [Configuration](#Configuration)
 - [About My Implementation](#About-my-implementation)
     - [Design](#The-Design)
     - [UDP and TCP handlers](#UDP-and-TCP-concurrent-handlers-with-Bonus-Features)  
@@ -27,13 +28,16 @@ make run
 dig blog.charlei.xyz @127.0.0.1 -p 5353 +tcp
 dig blog.charlei.xyz @127.0.0.1 -p 5353
 ```
-By default it's using CloudFlare as DNS Provider. The provider can be changed
-when the application is started changing the value of the `PRONSY_PROVIDERHOST`
-environment variable. (In the `docker-compose.yaml` in case you are running it
-with `make docker-run` or in the `env.env` if running with `make run`)
+## Configuration
+All the configurations so far are made via environment variables. 
+It is possible to set your own configurations from the following files
+depending on how the application is launched. 
 
-Pronsy automatically gets the TLS connection working and retrieving the RootCAs
-needed. 
+- In the `docker-compose.yaml` in case you are running it with `make docker-run` 
+- In the `env.env` if running with `make run`
+
+The variables in the files are almost self-explanatory, but they are also
+mentioned along this document. 
 
 ## About my implementation
 ### The Design
@@ -141,6 +145,21 @@ response to all of the queries DNSBlast sent.
 
 More of this tests in are in TODO: put file. 
 
+### The Resolver
+The resolver, at a software development level, is the package that knows how to
+talk with a DNS/TLS provider to solve domains. It hides the implementation
+details to the domain.  
+
+It automatically gets the TLS connection working and retrieving the RootCAs
+needed, and that enables Pronsy to talk with different providers. 
+
+By default it's using CloudFlare as DNS Provider. It can be changed
+when the application is started changing the value of the `PRONSY_PROVIDERHOST`
+environment variable. 
+
+
+
+
 
 ### Cache - Bonus Feature
 Pronsy features a really basic 'home-made' in-memory cache that saves the
@@ -151,7 +170,8 @@ It's just a map protected with a sync/Mutex and is locked and unlocked by the
 goroutines accesing to them. 
 
 It can be disabled by setting the `PRONSY_CACHEENABLED`environment variable to
-`false`. The data from the cache is flushed every N seconds. It's possible to assign a value to that N with the environment variable `PRONSY_CACHETTL`.  
+`false`. The data from the cache is flushed every N seconds. It's possible to
+assign a value to that N with the environment variable `PRONSY_CACHETTL`.  
 
 This cache implementation is not tied to the application and can be changed
 easily if desired. All what is needed is to write a new implementation
@@ -159,7 +179,8 @@ compliant with the `proxy.Cache` interface.
 
 If I get to deploy this solution in a more 'production ready' environment I
 would create an implementation to use Redis. That way I could spin multiple
-replicas of Pronsy while having a centralized cache server. 
+replicas of Pronsy while having a centralized cache server shared among the
+replicas. 
 
 ### Denylist with REST API - Bonus Feature
 This feature was not fully developed because of time reasons. 
@@ -199,7 +220,41 @@ Logstash/Kibana or Loki/Promtail can be really useful to accomplish this.
 
 ## Challenge Questions
 
-### Imagine this proxy being deployed in an infrastructure. What would be the security concerns you would raise?
+### Imagine this proxy being deployed in an infrastructure. What would be the security concerns you would raise? 
 
+If somebody get to sniff the incoming traffic to the proxy they can get to know
+the domains that are being queried by the clients since the traffic between the
+client and the proxy travels without encryption.
+
+For a correct use of this solution, it should be deployed in a private network
+were only the clients you want to use it can reach it. That way the unencrypted
+traffic only goes through your network and never reaches internet. The other
+side of the proxy is more secure since the traffic travels encrypted to the
+DNS/TLS Provider. 
 
 ### How would you integrate that solution in a distributed, microservices-oriented and containerized architecture?
+
+I have, at least, two approaches, with its trade offs and concerns.  
+
+One of them is to deploy it as a service with all the replicas needed
+behind an internal load balancer and make it available for other services within a
+private network. In AWS it can be configured as a DNS Server for a VPC
+enforcing all the hosts of that network to use it. 
+
+I have some concerns about the resolution of private domains, but I think it's
+possible to make that a feature in Pronsy. 
+
+On the other side, If you are using something like Kubernetes you can just
+deploy Pronsy as a sidecar for every application in the cluster [the way Istio
+does](https://istio.io/latest/docs/ops/configuration/traffic-management/dns-proxy/). 
+
+I found two problems to solve with this approach.
+- The observability. It's a complex task to get all the logs of all your
+  sidecars in a big infrasctructure. Also, there is a pro about this approach
+  regarding the observability: It could be easier to identify which
+  pod/applications is doing which request. (Also a feature opportunity for
+  Pronsy.) 
+- The compute resources. 1 pod to 1 sidecar of DNS proxy can be an overkill most
+  of the times and it's possible that having so many replicas of the proxy can
+  require a bigger infrasctructure when it can be avoided. 
+
