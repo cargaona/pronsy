@@ -7,7 +7,13 @@ Google.
 ## 
 - [Run It](#Test-it-yourself!)
 - [About My Implementation](#About-my-implementation)
-
+    - [Design](#The-Design)
+    - [UDP and TCP handlers](#UDP-and-TCP-concurrent-handlers-with-Bonus-Features)  
+        - [Testing the UDP resolution](#Testing-the-UDP-resolution)
+    - [Cache](#Cache---Bonus-Feature)
+    - [Denylist and API](#Denylist-with-REST-API---Bonus-Feature)
+    - [Logger](#Loggerr---Bonus-Feature) 
+- [Challenge Questions](#Challenge-Questions)
 ## Test it yourself! 
 
 ```sh
@@ -45,7 +51,8 @@ From my perspective this is very useful for two main reasons:
   with implementation details. That's the job of the gateways and the
   controllers.
                                 
-### UDP and TCP concurrent handlers. (Bonus Feature) 
+### UDP and TCP concurrent handlers with Bonus Features   
+
 Pronsy handles UDP and TCP DNS petitions. For the TCP implementation it uses an
 atomic counter to limit the number of active connections and make use of
 goroutines to handle concurrent requests. This can be configured with the
@@ -135,7 +142,7 @@ response to all of the queries DNSBlast sent.
 More of this tests in are in TODO: put file. 
 
 
-### Cache (Bonus Feature)
+### Cache - Bonus Feature
 Pronsy features a really basic 'home-made' in-memory cache that saves the
 recently solved domains to avoid losing time querying against the DNS
 Provider. 
@@ -154,7 +161,7 @@ If I get to deploy this solution in a more 'production ready' environment I
 would create an implementation to use Redis. That way I could spin multiple
 replicas of Pronsy while having a centralized cache server. 
 
-### Denylist with REST API (Bonus Feature)
+### Denylist with REST API - Bonus Feature
 This feature was not fully developed because of time reasons. 
 
 The domain package can be found with the interfaces needed to start this
@@ -168,7 +175,7 @@ domains by an administrator just like [PiHole](https://pi-hole.net/) or
 [Blocky](https://0xerr0r.github.io/blocky/) do.  
 
 
-### Logger (Bonus Feature)
+### Logger - Bonus Feature
 Most of the packages of Pronsy can be injected with a Logger. Just like the
 cache, this can be changed for a different implementation as well as it
 implements the methods of the Logger interface. 
