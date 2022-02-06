@@ -12,7 +12,7 @@ Google.
         - [Testing the UDP resolution](#Testing-the-UDP-resolution)
     - [Cache](#Cache---Bonus-Feature)
     - [Denylist and API](#Denylist-with-REST-API---Bonus-Feature)
-    - [Logger](#Loggerr---Bonus-Feature) 
+    - [Logger](#Logger---Bonus-Feature) 
 - [Challenge Questions](#Challenge-Questions)
 ## Test it yourself! 
 
