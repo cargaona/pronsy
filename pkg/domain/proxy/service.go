@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"crypto/tls"
+	"dns-proxy/pkg/domain/denylist"
 
 	"golang.org/x/net/dns/dnsmessage"
 )
@@ -47,13 +48,15 @@ type Service interface {
 type service struct {
 	resolver Resolver
 	parser   DNSParser
+	denier   denylist.Service
 	cache    Cache
 	logger   Logger
 }
 
-func NewDNSProxy(r Resolver, p DNSParser, c Cache, l Logger) Service {
+func NewDNSProxy(r Resolver, d denylist.Service, p DNSParser, c Cache, l Logger) Service {
 	return &service{
 		resolver: r,
+		denier:   d,
 		parser:   p,
 		cache:    c,
 		logger:   l,
@@ -85,7 +88,16 @@ func (s *service) solve(request []byte, protocol string) ([]byte, error) {
 		return nil, err
 	}
 	for _, q := range message.Questions {
-		s.logger.Info("DNS %s: %s ", protocol, q.Name.String())
+		// WIP look for the domain in the denylist before resolve it.
+		// denied, err := s.denier.GetDeniedDomain(q.Name.String())
+		// if err != nil {
+		// 	s.logger.Err("error looking for the domain in the denylist: %v", err)
+		// }
+		// if denied.Domain != "" {
+		// 	return nil, fmt.Errorf("domain %s found in denylist, can't resolve", q.Name.String())
+		// TODO: write 'empty' response as the DNS couldn't find the domain instead of sending an error'
+		// }
+		s.logger.Info("Resolving DNS %s: %s ", protocol, q.Name.String())
 	}
 	// Resolve the DNS against the DNS provider.
 	// The resolver returns a TCP Raw response that can be returned by this method.

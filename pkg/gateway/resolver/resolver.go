@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"dns-proxy/pkg/domain/proxy"
-	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -49,26 +48,29 @@ func (r *resolver) GetTLSConnection() (*tls.Conn, error) {
 	return conn, nil
 }
 
-func (r *resolver) Resolve(um []byte) ([]byte, error) {
+func (r *resolver) Resolve(request []byte) ([]byte, error) {
 	conn, err := r.GetTLSConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
-	_, e := conn.Write(um)
+	_, e := conn.Write(request)
 	if e != nil {
-		fmt.Printf("%v", e)
+		return nil, fmt.Errorf("could not send request to DNS Provider %s", r.dnsIP)
 	}
 	var reply [2045]byte
 	n, err := conn.Read(reply[:])
 	if err != nil {
-		return nil, errors.New("could not read response from DNSProvider")
+		return nil, fmt.Errorf("could not read response from DNS Provider %s", r.dnsIP)
 	}
 	return reply[:n], nil
 }
 
 func (r *resolver) getRootsCA() ([]*x509.Certificate, error) {
-	conn, err := tls.Dial(proxy.SocketTCP,
+	// TODO: There's no need to go get the certs from the provider on every request.
+	// Create a cache for the certs and update them every now and then to give a faster response.
+	conn, err := tls.Dial(
+		proxy.SocketTCP,
 		net.JoinHostPort(r.dnsIP, strconv.Itoa(r.port)),
 		&tls.Config{
 			InsecureSkipVerify: true,

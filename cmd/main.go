@@ -39,9 +39,12 @@ func main() {
 	go cacheTCP.AutoPurge()
 	go cacheUDP.AutoPurge()
 
+	// denySvc := denylist.NewService(nil)
+
 	// Create DNS Proxy injecting dependencies.
 	proxySvc := proxy.NewDNSProxy(
 		resolver.New(cfg.ProviderHost, cfg.ProviderPort, cfg.ResolverTimeOut),
+		nil, //denySvc
 		parser.NewDNSParser(),
 		cacheUDP,
 		logger.New("PROXY", true),
@@ -52,7 +55,7 @@ func main() {
 		proxySvc,
 		udp.NewUDPHandler(
 			2400,
-			1000,
+			30000000,
 			logger.New("UDP HANDLER", true),
 			cacheUDP,
 			parser.NewDNSParser(),
@@ -78,4 +81,8 @@ func main() {
 
 	go TCPDNSProxy.Serve()
 	UDPDNSProxy.Serve()
+
+	// TODO: API to handle blocked domains. Not implemented.
+	//	router := rest.Handler()
+	//	log.Fatal(http.ListenAndServe(":8080", router))
 }

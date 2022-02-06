@@ -48,13 +48,12 @@ func (c *Cache) AutoPurge() {
 
 func (c *Cache) Get(msg dnsmessage.Message) (*dnsmessage.Message, error) {
 	if !c.enabled {
-		c.log.Debug("Cache disabled. Not retrieving any data")
 		return nil, nil
 	}
 	c.mx.Lock()
 	defer c.mx.Unlock()
 	c.log.Debug("Looking for record: %v \n", msg.Questions[0].Name)
-	if value, ok := c.items[hashKey(msg)]; ok {
+	if value, ok := c.items[hasher(msg)]; ok {
 		c.log.Debug("Found record: %v \n", msg.Questions[0].Name)
 		return value.msg, nil
 	}
@@ -64,18 +63,17 @@ func (c *Cache) Get(msg dnsmessage.Message) (*dnsmessage.Message, error) {
 
 func (c *Cache) Store(msg dnsmessage.Message) error {
 	if !c.enabled {
-		c.log.Debug("Cache disabled. Not saving any data.")
 		return nil
 	}
 	c.mx.Lock()
 	c.log.Debug("Saving record: %v \n", msg.Questions[0].Name)
-	c.items[hashKey(msg)] = value{&msg, time.Now().Add(c.ttl)}
+	c.items[hasher(msg)] = value{&msg, time.Now().Add(c.ttl)}
 	c.mx.Unlock()
 	return nil
 }
 
-func hashKey(dnsm dnsmessage.Message) string {
+func hasher(msg dnsmessage.Message) string {
 	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%v", dnsm.Questions)))
+	h.Write([]byte(fmt.Sprintf("%v", msg.Questions)))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
