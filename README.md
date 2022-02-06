@@ -1,10 +1,14 @@
-## Pronsy: a DNS to DNS-over-TLS Proxy for N26 SRE Challenge
+# Pronsy: a DNS to DNS-over-TLS Proxy for N26 SRE Challenge
 
 Pronsy is a DNS proxy written in Go that listen UDP and TCP requests from the
 client and resolves the petitions against a DNS/TLS server, like CloudFlare or
 Google.  
 
-Test it yourself! 
+## 
+- [Run It](#Test-it-yourself!)
+- [About My Implementation](#About-my-implementation)
+
+## Test it yourself! 
 
 ```sh
 ## build and run it using docker
@@ -57,15 +61,21 @@ handler function where the petition is finally solved calling the Proxy
 Service. For the UDP implementation the goroutines are limited by the number of
 CPUs the host machine have. 
 
+It is possible to change the buffer size of the message queue with
+`PRONSY_UDPMAXQUEUESIZE`. 
+
+#### Testing the UDP resolution. 
 I ran some tests under different conditions to see how the UDP resolution
-behaves. All the tests were performed in a Intel i7-1165g7 8 cores @ 4.70ghz
-and 16GB of RAM DDR4. 
+behaves. All the tests were performed in my local machine, a Laptop with an
+Intel i7-1165g7 8 cores @ 4.70ghz 16GB of RAM DDR4, using ArchLinux
+5.16.1-arch1-1.
 
 The tool used for the tests was
-[DNSBlast](https://github.com/jedisct1/dnsblast).
+[DNSBlast](https://github.com/jedisct1/dnsblast). It sends randon domains to a
+given DNS Resolver. 
 
 ```bash
-$ time ./dnsblast 127.0.0.1 1000 100 5354
+$ time ./dnsblast 127.0.0.1 1000 100 5353
 ```
 
 - Conditions: Using CloudFlare, buffer size of 1000, sending 1000 requests. 100
@@ -76,7 +86,6 @@ Queries Sent: 1000
 Queries Received: 1000
 Elapsed time: 49.986s
 Reply Rate: 20 pps
-
 ```
 
 - Conditions: Using CloudFlare, buffer size of 10000, sending 1000 requests.
@@ -87,7 +96,6 @@ Queries Sent: 1000
 Queries Received: 1000
 Elapsed time: 35.370s
 Reply Rate: 28 pps
-
 ```
 
 - Conditions: Using CloudFlare, buffer size of 100000, sending 1000 requests.
@@ -98,7 +106,6 @@ Queries Sent: 1000
 Queries Received: 1000
 Elapsed time: 19.171s
 Reply Rate: 52 pps
-
 ```
 - Conditions: Using CloudFlare, buffer size of 1000000, sending 1000 requests.
   100 request per second.  
@@ -108,23 +115,21 @@ Queries Sent: 1000
 Queries Received: 1000
 Elapsed time: 20.011s
 Reply Rate: 49 pps
-
 ```
 It seems I found a limit here since 100000 or 1000000 buffer size perform
 almost the same. 
 
 I did the test directly against CloudFlare, no proxy in the middle, and this is
-what I got
+what I got:
 
 ```sh
 Queries Sent: 1000
 Queries Received: 631
 Elapsed time: 12.941s
 Reply Rate: 61 pps
-
 ```
 As expected, CloudFlare performs better than my local proxy but also seems to
-limit the request you send them and I guess that's why I'm not receiving
+limit the requests you send them and I guess that's why I'm not receiving
 response to all of the queries DNSBlast sent. 
 
 More of this tests in are in TODO: put file. 
@@ -139,7 +144,7 @@ It's just a map protected with a sync/Mutex and is locked and unlocked by the
 goroutines accesing to them. 
 
 It can be disabled by setting the `PRONSY_CACHEENABLED`environment variable to
-`false`
+`false`. The data from the cache is flushed every N seconds. It's possible to assign a value to that N with the environment variable `PRONSY_CACHETTL`.  
 
 This cache implementation is not tied to the application and can be changed
 easily if desired. All what is needed is to write a new implementation
@@ -165,7 +170,7 @@ domains by an administrator just like [PiHole](https://pi-hole.net/) or
 
 ### Logger (Bonus Feature)
 Most of the packages of Pronsy can be injected with a Logger. Just like the
-cache, this is can be changed for a different implementation as well as it
+cache, this can be changed for a different implementation as well as it
 implements the methods of the Logger interface. 
 
 The STD Output implementation shipped with this codebase allows Pronsy to log
