@@ -118,6 +118,7 @@ Queries Received: 1000
 Elapsed time: 19.171s
 Reply Rate: 52 pps
 ```
+
 - Conditions: Using CloudFlare, buffer size of 1000000, sending 1000 requests.
   100 request per second.  
 
@@ -150,26 +151,22 @@ The resolver, at a software development level, is the package that knows how to
 talk with a DNS/TLS provider to solve domains. It hides the implementation
 details to the domain.  
 
-It automatically gets the TLS connection working and retrieving the RootCAs
+It automatically gets the TLS connection working and retrieves the RootCAs
 needed, and that enables Pronsy to talk with different providers. 
 
 By default it's using CloudFlare as DNS Provider. It can be changed
 when the application is started changing the value of the `PRONSY_PROVIDERHOST`
 environment variable. 
 
-
-
-
-
 ### Cache - Bonus Feature
 Pronsy features a really basic 'home-made' in-memory cache that saves the
 recently solved domains to avoid losing time querying against the DNS
 Provider. 
 
-It's just a map protected with a sync/Mutex and is locked and unlocked by the
-goroutines accesing to them. 
+It's just a map protected with a sync/Mutex that is locked and unlocked by the
+goroutines accesing it. 
 
-It can be disabled by setting the `PRONSY_CACHEENABLED`environment variable to
+This feature can be disabled by setting the `PRONSY_CACHEENABLED` environment variable to
 `false`. The data from the cache is flushed every N seconds. It's possible to
 assign a value to that N with the environment variable `PRONSY_CACHETTL`.  
 
@@ -214,7 +211,7 @@ to the packages to start loging to CloudWatch without modifying the domain of
 our application. 
                                         
 If I were to give a solution for a production environment running multiple
-replicas of Pronsy I would use a stdoutput scrapper that sends the logs to a
+replicas of Pronsy I would use a std output scrapper that sends the logs to a
 different system where me or a group of teams can watch them. Solutions like
 Logstash/Kibana or Loki/Promtail can be really useful to accomplish this.    
 
@@ -257,4 +254,12 @@ I found two problems to solve with this approach.
 - The compute resources. 1 pod to 1 sidecar of DNS proxy can be an overkill most
   of the times and it's possible that having so many replicas of the proxy can
   require a bigger infrasctructure when it can be avoided. 
+
+### What other improvements do you think would be interesting to add to the project?
+I would go deeper with the development of the bonus features I added to the project. 
+Logs feature can go further. I would create a log implementation that push logs away.
+For a production environment the cache could be a key feature. 
+The deny/block list it's a really nice to have here. This capability can extend to block domains or also block IPs. 
+Metrics exposure. We already have logs. But we can add some metrics endpoints, Prometheus style, to create dashboards to quickly see how many petitions are solved successfully, how many of them failed, why they failed, the most petitioned domains, cache metrics, blocked domains metrics and son on. 
+
 
