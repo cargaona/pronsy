@@ -20,7 +20,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%+v\n sdsds", cfg)
 
 	// Create and start cacheUDP autopurge.
 	cacheUDP := cache.New(
@@ -40,7 +39,7 @@ func main() {
 
 	// Create DNS Proxy injecting dependencies.
 	proxySvc := proxy.NewDNSProxy(
-		resolver.NewResolver(cfg.ProviderHost, cfg.ProviderPort, cfg.ResolverTimeOut),
+		resolver.New(cfg.ProviderHost, cfg.ProviderPort, cfg.ResolverTimeOut),
 		parser.NewDNSParser(),
 		cacheUDP,
 		logger.New("PROXY", true),
@@ -49,7 +48,7 @@ func main() {
 	// Start the TCP and UDP servers.
 	UDPDNSProxy := udp.New(
 		proxySvc,
-		udp.NewUDPHandler(2400, 100000000, logger.New("UDP HANDLER", true), cacheUDP, parser.NewDNSParser()),
+		udp.NewUDPHandler(2400, 1000, logger.New("UDP HANDLER", true), cacheUDP, parser.NewDNSParser()),
 		logger.New("UDP SERVER", true),
 		cfg.Port,
 		runtime.NumCPU(),

@@ -71,7 +71,7 @@ func main() {
 	)
 	// Create DNS Proxy injecting dependencies.
 	proxySvc := proxy.NewDNSProxy(
-		resolver.NewResolver(cfg.DnsHost, 853, cfg.ResolverReadTo),
+		resolver.New(cfg.DnsHost, 853, cfg.ResolverReadTo),
 		parser.NewDNSParser(),
 		cache,
 		logger.New("PROXY", true),

@@ -3,8 +3,6 @@ package tcp
 import (
 	"dns-proxy/pkg/domain/proxy"
 	"net"
-	"os"
-	"os/signal"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -16,6 +14,7 @@ const (
 
 var ops uint64 = 0
 var total uint64 = 0
+var connections uint64 = 0
 var flushTicker *time.Ticker
 
 type TCPServer struct {
@@ -35,7 +34,7 @@ type Logger interface {
 }
 
 type HandlerTCP interface {
-	HandleTCPConnection(conn *net.Conn, p proxy.Service, conns *uint64)
+	HandleTCPConnection(conn *net.Conn, p proxy.Service)
 }
 
 func New(proxy proxy.Service, tcpHandler HandlerTCP, logger Logger, port int, host string, maxPoolConnection int) *TCPServer {
@@ -50,43 +49,30 @@ func New(proxy proxy.Service, tcpHandler HandlerTCP, logger Logger, port int, ho
 }
 
 func (d *TCPServer) Serve() {
+	d.log.Debug("Starting to serve TCP")
+	d.log.Debug("Max number of incoming connections  %v", d.maxPoolConnection)
+	// Start listener. No blocking.
 	d.listendAndReceive()
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			atomic.AddUint64(&total, ops)
-			d.log.Info("Interrupt signal detected. Finishing application")
-			os.Exit(0)
-		}
-	}()
-
-	// TODO: limit the tcp connections
-	// TODO: understand ticker
-	flushTicker = time.NewTicker(flushInterval)
-	for range flushTicker.C {
-		atomic.AddUint64(&total, ops)
-		atomic.StoreUint64(&ops, 0)
-	}
 }
 
 func (d *TCPServer) listendAndReceive() error {
 	d.log.Info("### Listening TCP at :%d", d.port)
-	ln, err := net.Listen(proxy.SocketTCP, d.host+":"+strconv.Itoa(d.port))
+	ln, err := net.Listen(proxy.SocketTCP, net.JoinHostPort(d.host, strconv.Itoa(d.port)))
 	if err != nil {
 		d.log.Err("%v", err)
 		panic(err)
 	}
-	var conns uint64
 	for {
-		if conns <= uint64(d.maxPoolConnection-1) {
+		if connections <= uint64(d.maxPoolConnection-1) {
 			conn, err := ln.Accept()
-			atomic.AddUint64(&conns, 1)
+			// Add 1 to the connection atomic counter.
+			atomic.AddUint64(&connections, 1)
+			d.log.Debug("current TCP connections %v", connections)
 			if err != nil {
 				d.log.Err("%v", err)
 				//panic(err)
 			}
-			go d.handler.HandleTCPConnection(&conn, d.proxySvc, &conns)
+			go d.handler.HandleTCPConnection(&conn, d.proxySvc)
 		}
 	}
 }

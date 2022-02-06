@@ -6,10 +6,6 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-//type Message []byte
-//type MessageFromRequest = Message
-//type MessageFromProvider = Message
-
 // SocketTCP and SocketUDP are constants that represent the 'udp' and 'tcp' strings used multiple times.
 const (
 	SocketTCP = "tcp"
@@ -103,70 +99,7 @@ func (s *service) solve(request []byte, protocol string) ([]byte, error) {
 		return response, nil
 	}
 	// If it was not TCP a TCP to UDP cast is needed.
-	dnsresponse, _ := s.parser.TCPMsgToDNS(response)
-	response, _ = s.parser.DNSToMsg(dnsresponse, SocketUDP)
+	dnsResponse, _ := s.parser.TCPMsgToDNS(response)
+	response, _ = s.parser.DNSToMsg(dnsResponse, SocketUDP)
 	return response, nil
 }
-
-//func (s *service) solve(messageFromRequest MessageFromRequest, protocol string) (MessageFromProvider, error) {
-//	var err error
-//	var message *dnsmessage.Message
-//	if protocol == SocketUDP {
-//		// At this point 'message' is DNS format but UDP
-//		message, err = s.parser.UDPMsgToDNS(messageFromRequest)
-//		// messageFromRequest came as raw UDP and now is raw TCP.
-//		messageFromRequest, err = s.parser.DNSToMsg(message, SocketTCP)
-//	}
-//	if protocol == SocketTCP {
-//		message, err = s.parser.TCPMsgToDNS(messageFromRequest)
-//	}
-//	if err != nil {
-//		s.logger.Err("error parsing UnsolvedMsg: %v \n", err)
-//		return nil, err
-//	}
-//	for _, q := range message.Questions {
-//		s.logger.Info("DNS %s: %s ", SocketUDP, q.Name.String())
-//	}
-//	// Check if record exists in the cache and return it.
-//	// If exists, it was saved as 'dnsmessage' UDP or TCP. Check using 'dnsmessage'.
-//	cachedMessage, err := s.cache.Get(*message)
-//	if err != nil {
-//		s.logger.Err("Cache error: %v", err)
-//	}
-//	if cachedMessage != nil {
-//		s.logger.Debug("Message found in cache")
-//		cachedMessage.Header.ID = message.Header.ID
-//		// Message from cache returns as 'dnsmessage'. Parse to 'raw' to return.
-//		cachedMessageRaw, err := s.parser.DNSToMsg(cachedMessage, protocol)
-//		if err != nil {
-//			return nil, errors.New("wrong value stored in cache")
-//		}
-//		return cachedMessageRaw, nil
-//	}
-//	// If it was not cached resolve it.
-//	// Resolve the DNS against the DNS provider.
-//	// The resolver returns a TCP Raw response that can be returned by this method.
-//	solvedMessageRaw, err := s.resolver.Resolve(messageFromRequest)
-//	if err != nil {
-//		s.logger.Err("resolution Error: %v \n", err)
-//		return nil, err
-//	}
-//	// To update the cache a 'dnsmessage' type is needed.
-//	// Cast the Raw TCP response from the Resolver.
-//	DNSTCPResponse, err := s.parser.TCPMsgToDNS(solvedMessageRaw)
-//	if err != nil {
-//		return nil, err
-//	}
-//	err = s.cache.Store(*DNSTCPResponse)
-//	if err != nil {
-//		s.logger.Err("error updating cache: %v \n", err)
-//	}
-//	// If the protocol is TCP the message is ready to be sent.
-//	if protocol == SocketTCP {
-//		return solvedMessageRaw, nil
-//	}
-//	// If it was not TCP it was UDP. TCP to UDP cast is needed.
-//	solvedMessageRaw, _ = s.parser.DNSToMsg(DNSTCPResponse, SocketUDP)
-//	return solvedMessageRaw, nil
-//}
-//

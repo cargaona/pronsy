@@ -6,6 +6,7 @@ import (
 	"dns-proxy/pkg/domain/proxy"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"time"
 )
@@ -34,7 +35,7 @@ func (r *resolver) GetTLSConnection() (*tls.Conn, error) {
 		roots.AddCert(cert)
 	}
 	conn, err := tls.Dial(
-		proxy.SocketTCP, r.dnsIP+":"+strconv.Itoa(r.port),
+		proxy.SocketTCP, net.JoinHostPort(r.dnsIP, strconv.Itoa(r.port)),
 		&tls.Config{
 			RootCAs: roots,
 		})
@@ -67,9 +68,11 @@ func (r *resolver) Resolve(um []byte) ([]byte, error) {
 }
 
 func (r *resolver) getRootsCA() ([]*x509.Certificate, error) {
-	conn, err := tls.Dial(proxy.SocketTCP, r.dnsIP+":"+strconv.Itoa(r.port), &tls.Config{
-		InsecureSkipVerify: true,
-	})
+	conn, err := tls.Dial(proxy.SocketTCP,
+		net.JoinHostPort(r.dnsIP, strconv.Itoa(r.port)),
+		&tls.Config{
+			InsecureSkipVerify: true,
+		})
 	if err != nil {
 		return nil, err
 	}

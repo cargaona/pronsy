@@ -19,7 +19,7 @@ type Cache struct {
 	enabled bool
 	ttl     time.Duration
 	mx      sync.Mutex
-	logger  proxy.Logger
+	log     proxy.Logger
 	items   map[string]value
 }
 
@@ -27,7 +27,7 @@ func New(ttl time.Duration, logger proxy.Logger, enabled bool) proxy.Cache {
 	cache := &Cache{
 		ttl:     ttl,
 		items:   map[string]value{},
-		logger:  logger,
+		log:     logger,
 		enabled: enabled,
 	}
 	return cache
@@ -38,7 +38,7 @@ func (c *Cache) AutoPurge() {
 		for key, value := range c.items {
 			if value.expiration.Before(now) {
 				c.mx.Lock()
-				c.logger.Info("Clearing entry: %v \n", key)
+				c.log.Info("Clearing entry: %v \n", key)
 				delete(c.items, key)
 				c.mx.Unlock()
 			}
@@ -46,30 +46,30 @@ func (c *Cache) AutoPurge() {
 	}
 }
 
-func (c *Cache) Get(dnsm dnsmessage.Message) (*dnsmessage.Message, error) {
+func (c *Cache) Get(msg dnsmessage.Message) (*dnsmessage.Message, error) {
 	if !c.enabled {
-		c.logger.Info("Cache disabled. Not retrieving any data")
+		c.log.Info("Cache disabled. Not retrieving any data")
 		return nil, nil
 	}
 	c.mx.Lock()
 	defer c.mx.Unlock()
-	c.logger.Debug("Looking for record: %v \n", dnsm.Questions[0].Name)
-	if value, ok := c.items[hashKey(dnsm)]; ok {
-		c.logger.Debug("Found record: %v \n", dnsm.Questions[0].Name)
+	c.log.Debug("Looking for record: %v \n", msg.Questions[0].Name)
+	if value, ok := c.items[hashKey(msg)]; ok {
+		c.log.Debug("Found record: %v \n", msg.Questions[0].Name)
 		return value.msg, nil
 	}
-	c.logger.Debug("Record: %v not found", dnsm.Questions[0].Name)
+	c.log.Debug("Record: %v not found", msg.Questions[0].Name)
 	return nil, nil
 }
 
-func (c *Cache) Store(dnsm dnsmessage.Message) error {
+func (c *Cache) Store(msg dnsmessage.Message) error {
 	if !c.enabled {
-		c.logger.Info("Cache disabled. Not saving any data.")
+		c.log.Info("Cache disabled. Not saving any data.")
 		return nil
 	}
 	c.mx.Lock()
-	c.logger.Debug("Saving record: %v \n", dnsm.Questions[0].Name)
-	c.items[hashKey(dnsm)] = value{&dnsm, time.Now().Add(c.ttl)}
+	c.log.Debug("Saving record: %v \n", msg.Questions[0].Name)
+	c.items[hashKey(msg)] = value{&msg, time.Now().Add(c.ttl)}
 	c.mx.Unlock()
 	return nil
 }

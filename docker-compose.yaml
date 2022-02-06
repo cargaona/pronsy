@@ -1,0 +1,22 @@
+version: '3.1'
+
+services:
+  dns-proxy:
+    build: .
+    restart: always
+    environment:
+      DNSPROXY_PORT: 5353
+        # time in miliseconds
+      DNSPROXY_TCPMAXCONNPOOL: 100
+      DNSPROXY_CACHETTL: 120
+      DNSPROXY_RESOLVERTIMEOUT: 3000
+        # google
+        #DNSPROXY_PROVIDERHOST: 8.8.8.8
+        # dns.sb
+        #DNSPROXY_PROVIDERHOST: 185.222.222.222
+        # CloudFlare
+      DNSPROXY_PROVIDERHOST: 1.1.1.1
+      DNSPROXY_PROVIDERPORT: 853
+    ports:
+      - "5353:5353/tcp"
+      - "5353:5353/udp"

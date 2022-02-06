@@ -50,7 +50,6 @@ func (u *UDPHandler) handleMessage(c net.PacketConn, m *message, p proxy.Service
 		if err != nil {
 			u.log.Err("%v", err)
 		}
-		atomic.AddUint64(&u.ops, 1)
 		return
 	}
 	// if cachedMessage it's empty go resolve the DNS.
@@ -62,12 +61,12 @@ func (u *UDPHandler) handleMessage(c net.PacketConn, m *message, p proxy.Service
 	if err != nil {
 		u.log.Err("%v", err)
 	}
-	// Once we write the response to the client save the record in the cache.
+	// Once the response is written to the client save the record in memory cache.
 	if u.StoreRecordInCache(response) != nil {
 		u.log.Err("%v", err)
 	}
 
-	atomic.AddUint64(&u.ops, 1)
+	atomic.AddUint64(&ops, 1)
 }
 
 func (u *UDPHandler) StoreRecordInCache(msg []byte) error {
@@ -132,10 +131,6 @@ func (u *UDPHandler) Receive(c net.PacketConn) {
 // enqueue puts a message in the queue.
 func (u *UDPHandler) enqueue(m message) {
 	u.messageQueue <- m
-}
-
-func (u *UDPHandler) GetOps() uint64 {
-	return u.ops
 }
 
 func (u *UDPHandler) GetQueueMax() int {

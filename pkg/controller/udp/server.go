@@ -15,6 +15,7 @@ const (
 )
 
 var total uint64 = 0
+var ops uint64 = 0
 var flushTicker *time.Ticker
 
 // Logger interface is used to inject different implementations of loggers.
@@ -27,8 +28,9 @@ type Logger interface {
 type HandlerUDP interface {
 	Receive(net.PacketConn)
 	Dequeue(proxy.Service)
-	GetOps() uint64
+	//   GetOps() uint64
 	GetQueueMax() int
+	//   WriteOps(uint64)
 }
 
 // UDPServer is the struct that contains the configuration for the UDP server.
@@ -63,16 +65,18 @@ func (d *UDPServer) Serve() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			atomic.AddUint64(&total, d.handler.GetOps())
-			//d.log.Info("Total ops %d", total)
+			// Add the last operations to the total once the interrupt signal comes,  display the data and close the application.
+			atomic.AddUint64(&total, ops)
+			d.log.Info("Total Operations %d", total)
 			d.log.Info("Interrupt signal detected. Finishing application")
 			os.Exit(0)
 		}
 	}()
 
+	// The ticker prevents this routine to finish while the 'receive' and 'dequeue' functions are reading and processing packets.
 	flushTicker = time.NewTicker(flushInterval)
 	for range flushTicker.C {
-		ops := d.handler.GetOps()
+		// Every flushTicker.C time add the operations to the total and reset the operations counter.
 		atomic.AddUint64(&total, ops)
 		atomic.StoreUint64(&ops, 0)
 	}
@@ -85,6 +89,7 @@ func (s *UDPServer) listenAndReceive() error {
 		s.log.Err("Error listening packets", err)
 		return err
 	}
+	// Spawn maxWorkers number of goroutines that will handle the incoming UDP packets.
 	for i := 0; i < s.maxWorkers; i++ {
 		go s.handler.Dequeue(s.proxySvc)
 		go s.handler.Receive(c)
