@@ -3,7 +3,7 @@ package parser
 import (
 	"dns-proxy/pkg/domain/proxy"
 	"errors"
-	"log"
+	"fmt"
 
 	"golang.org/x/net/dns/dnsmessage"
 )
@@ -15,19 +15,26 @@ func NewDNSParser() proxy.DNSParser {
 }
 
 func (mp *dnsParser) DNSToMsg(dnsm *dnsmessage.Message, protocol string) ([]byte, error) {
-	m, err := dnsm.Pack()
+	message, err := dnsm.Pack()
 	if err != nil {
 		return nil, err
 	}
-	if protocol == "tcp" {
-		var tcpBytes []byte
-		tcpBytes = make([]byte, 2)
-		tcpBytes[0] = 0
-		tcpBytes[1] = byte(len(m))
-		m = append(tcpBytes, m...)
-		return m, nil
-	} else if protocol == "udp" {
-		return m, nil
+	if protocol == proxy.SocketTCP {
+		//	https://www.ietf.org/rfc/rfc1035.txt
+		//	4.2.2. TCP usage
+		//	Messages sent over TCP connections use server port 53 (decimal).  The
+		//	message is prefixed with a two byte length field which gives the message
+		//	length, excluding the two byte length field.  This length field allows
+		//	the low-level processing to assemble a complete message before beginning
+		//	to parse it.
+		var prefixBytesTCP []byte
+		prefixBytesTCP = make([]byte, 2)
+		prefixBytesTCP[0] = 0
+		prefixBytesTCP[1] = byte(len(message))
+		message = append(prefixBytesTCP, message...)
+		return message, nil
+	} else if protocol == proxy.SocketUDP {
+		return message, nil
 	} else {
 		return nil, errors.New("invalid msg format")
 	}
@@ -37,18 +44,17 @@ func (mp *dnsParser) UDPMsgToDNS(m []byte) (*dnsmessage.Message, error) {
 	var dnsm dnsmessage.Message
 	err := dnsm.Unpack(m[:])
 	if err != nil {
-		log.Printf("Unable to parse UDP Message: %v \n", err)
-		return nil, errors.New("unable to unpack request, invalid message.")
+		return nil, fmt.Errorf("unable to unpack udp message: %s", err)
 	}
 	return &dnsm, nil
 }
 
 func (mp *dnsParser) TCPMsgToDNS(m []byte) (*dnsmessage.Message, error) {
 	var dnsm dnsmessage.Message
+	// Unpack the mesage starting from the second position.
 	err := dnsm.Unpack(m[2:])
 	if err != nil {
-		log.Printf("Unable to parse TCP Message: %v \n", err)
-		return nil, errors.New("unable to unpack request, invalid message.")
+		return nil, fmt.Errorf("unable to unpack tcp message: %s", err)
 	}
 	return &dnsm, nil
 }
