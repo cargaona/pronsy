@@ -2,6 +2,7 @@ package main
 
 import (
 	"dns-proxy/internal/config"
+	"dns-proxy/pkg/controller/rest"
 	"dns-proxy/pkg/controller/tcp"
 	"dns-proxy/pkg/controller/udp"
 	"dns-proxy/pkg/domain/proxy"
@@ -11,6 +12,7 @@ import (
 	"dns-proxy/pkg/gateway/resolver"
 	"fmt"
 	"log"
+	"net/http"
 	"runtime"
 	"time"
 )
@@ -55,7 +57,7 @@ func main() {
 		proxySvc,
 		udp.NewUDPHandler(
 			2400,
-			30000000,
+			cfg.UDPMaxQueueSize,
 			logger.New("UDP HANDLER", true),
 			cacheUDP,
 			parser.NewDNSParser(),
@@ -76,13 +78,13 @@ func main() {
 		logger.New("TCP SERVER", true),
 		cfg.Port,
 		"0.0.0.0",
-		cfg.TcpMaxConnPool,
+		cfg.TCPMaxConnPool,
 	)
 
 	go TCPDNSProxy.Serve()
-	UDPDNSProxy.Serve()
+	go UDPDNSProxy.Serve()
 
 	// TODO: API to handle blocked domains. Not implemented.
-	//	router := rest.Handler()
-	//	log.Fatal(http.ListenAndServe(":8080", router))
+	router := rest.Handler(nil)
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

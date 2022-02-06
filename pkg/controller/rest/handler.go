@@ -12,7 +12,7 @@ import (
 func Handler(denySvc denylist.Service) *gin.Engine {
 	router := gin.New()
 	router.GET("ping", ping)
-	router.PUT("/deny/:domain", addDeniedDomain(denySvc))
+	//router.PUT("/deny/:domain", addDeniedDomain(denySvc))
 	return router
 }
 

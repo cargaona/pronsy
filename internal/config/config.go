@@ -3,18 +3,19 @@ package config
 import "github.com/kelseyhightower/envconfig"
 
 type Config struct {
-	Port            int
-	TcpMaxConnPool  int
+	TCPMaxConnPool  int
+	UDPMaxQueueSize int
+	CacheEnabled    bool
 	CacheTTL        int
 	ResolverTimeOut uint
 	ProviderHost    string
 	ProviderPort    int
-	CacheEnabled    bool
+	Port            int
 }
 
 func GetConfig() (*Config, error) {
 	var s Config
-	err := envconfig.Process("dnsproxy", &s)
+	err := envconfig.Process("pronsy", &s)
 	if err != nil {
 		return nil, err
 	}
