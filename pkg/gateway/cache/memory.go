@@ -48,7 +48,7 @@ func (c *Cache) AutoPurge() {
 
 func (c *Cache) Get(msg dnsmessage.Message) (*dnsmessage.Message, error) {
 	if !c.enabled {
-		c.log.Info("Cache disabled. Not retrieving any data")
+		c.log.Debug("Cache disabled. Not retrieving any data")
 		return nil, nil
 	}
 	c.mx.Lock()
@@ -64,7 +64,7 @@ func (c *Cache) Get(msg dnsmessage.Message) (*dnsmessage.Message, error) {
 
 func (c *Cache) Store(msg dnsmessage.Message) error {
 	if !c.enabled {
-		c.log.Info("Cache disabled. Not saving any data.")
+		c.log.Debug("Cache disabled. Not saving any data.")
 		return nil
 	}
 	c.mx.Lock()

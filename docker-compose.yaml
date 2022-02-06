@@ -5,10 +5,11 @@ services:
     build: .
     restart: always
     environment:
-      DNSPROXY_PORT: 5353
         # time in miliseconds
-      DNSPROXY_TCPMAXCONNPOOL: 100
+      DNSPROXY_PORT: 5353
+      DNSPROXY_CACHEENABLED: true
       DNSPROXY_CACHETTL: 120
+      DNSPROXY_TCPMAXCONNPOOL: 100
       DNSPROXY_RESOLVERTIMEOUT: 3000
         # google
         #DNSPROXY_PROVIDERHOST: 8.8.8.8

@@ -26,7 +26,8 @@ func (l *Logger) Err(format string, i ...interface{}) {
 }
 
 func (l *Logger) Debug(format string, i ...interface{}) {
-	if l.debug {
-		log.Printf(l.name+" [DEBUG] "+format, i...)
+	if !l.debug {
+		return
 	}
+	log.Printf(l.name+" [DEBUG] "+format, i...)
 }

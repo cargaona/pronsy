@@ -42,6 +42,7 @@ func (d *TCPHandler) HandleTCPConnection(conn *net.Conn, p proxy.Service) {
 	// Look for message in the cache before resolve it.
 	cachedMessage, err := d.GetRecordFromCache(msg)
 	if cachedMessage != nil {
+		//(*conn).Write(cachedMessage)
 		(*conn).Write(cachedMessage)
 		atomic.AddUint64(&connections, ^uint64(0))
 		return

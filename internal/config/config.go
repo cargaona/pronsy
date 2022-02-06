@@ -9,6 +9,7 @@ type Config struct {
 	ResolverTimeOut uint
 	ProviderHost    string
 	ProviderPort    int
+	CacheEnabled    bool
 }
 
 func GetConfig() (*Config, error) {
