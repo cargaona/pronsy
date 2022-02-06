@@ -256,10 +256,21 @@ I found two problems to solve with this approach.
   require a bigger infrasctructure when it can be avoided. 
 
 ### What other improvements do you think would be interesting to add to the project?
-I would go deeper with the development of the bonus features I added to the project. 
-Logs feature can go further. I would create a log implementation that push logs away.
-For a production environment the cache could be a key feature. 
-The deny/block list it's a really nice to have here. This capability can extend to block domains or also block IPs. 
-Metrics exposure. We already have logs. But we can add some metrics endpoints, Prometheus style, to create dashboards to quickly see how many petitions are solved successfully, how many of them failed, why they failed, the most petitioned domains, cache metrics, blocked domains metrics and son on. 
+I would go deeper with the development of the bonus features I added to the
+project. 
+
+Logs feature can go further. It's a good idea to me to create a Logger
+implementation that push logs away, to an external system. 
+
+For a production environment the cache could be a key feature. I would rely on
+an external cache system to enable scalability 
+
+The deny/block list it's a really nice to have here. This capability can be extended
+to block domains or also block IPs. 
+
+Metrics exposure. This project already have logs. But we can add some metrics
+endpoints, Prometheus style, to feed dashboards to quickly see how many
+petitions are solved successfully, how many of them failed, why do they failed,
+the most petitioned domains, cache metrics, blocked domains metrics and so on. 
 
 
