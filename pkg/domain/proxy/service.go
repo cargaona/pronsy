@@ -22,7 +22,7 @@ type Resolver interface {
 type Cache interface {
 	Get(dnsm dnsmessage.Message) (*dnsmessage.Message, error)
 	Store(dnsm dnsmessage.Message) error
-	AutoPurge()
+	Flush()
 }
 
 // DNSParser is the interface used to parse the messages between the domain entity type and the *dnsmessage.Message type.

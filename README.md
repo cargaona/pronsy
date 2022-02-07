@@ -64,7 +64,7 @@ environment variable `PRONSY_TCPMAXCONNPOOL`
 
 The UDP implementation has a more elaborated approach, it features a custom
 queue created on top of a channel and the limit of the 'handled messages' is
-set by the channel buffer size. The message to be solved the 'Proxy Service'
+set by the channel buffer size. The message to be solved by the 'Proxy Service'
 goes through a goroutine that reads the message from the socket and send it to
 the queue. On the other side, there is a 'Dequeue' function that also works
 concurrently getting the messages from the queue and sending them to the
@@ -82,7 +82,7 @@ Intel i7-1165g7 8 cores @ 4.70ghz 16GB of RAM DDR4, using ArchLinux
 5.16.1-arch1-1.
 
 The tool used for the tests was
-[DNSBlast](https://github.com/jedisct1/dnsblast). It sends randon domains to a
+[DNSBlast](https://github.com/jedisct1/dnsblast). It sends random generated domains to a
 given DNS Resolver. 
 
 ```bash
@@ -144,12 +144,10 @@ As expected, CloudFlare performs better than my local proxy but also seems to
 limit the requests you send them and I guess that's why I'm not receiving
 response to all of the queries DNSBlast sent. 
 
-More of this tests in are in TODO: put file. 
-
 ### The Resolver
 The resolver, at a software development level, is the package that knows how to
 talk with a DNS/TLS provider to solve domains. It hides the implementation
-details to the domain.  
+details from the domain.  
 
 It automatically gets the TLS connection working and retrieves the RootCAs
 needed, and that enables Pronsy to talk with different providers. 
@@ -166,9 +164,10 @@ Provider.
 It's just a map protected with a sync/Mutex that is locked and unlocked by the
 goroutines accesing it. 
 
-This feature can be disabled by setting the `PRONSY_CACHEENABLED` environment variable to
-`false`. The data from the cache is flushed every N seconds. It's possible to
-assign a value to that N with the environment variable `PRONSY_CACHETTL`.  
+This feature can be disabled by setting the `PRONSY_CACHEENABLED` environment
+variable to `false`. The data from the cache is flushed every N seconds. It's
+possible to assign a value to that N with the environment variable
+`PRONSY_CACHETTL`.  
 
 This cache implementation is not tied to the application and can be changed
 easily if desired. All what is needed is to write a new implementation

@@ -2,14 +2,18 @@ package main
 
 import (
 	"dns-proxy/internal/config"
+
 	"dns-proxy/pkg/controller/rest"
 	"dns-proxy/pkg/controller/tcp"
 	"dns-proxy/pkg/controller/udp"
+
 	"dns-proxy/pkg/domain/proxy"
+
 	"dns-proxy/pkg/gateway/cache"
 	"dns-proxy/pkg/gateway/logger"
 	"dns-proxy/pkg/gateway/parser"
 	"dns-proxy/pkg/gateway/resolver"
+
 	"fmt"
 	"log"
 	"net/http"
@@ -38,8 +42,8 @@ func main() {
 		cfg.CacheEnabled,
 	)
 
-	go cacheTCP.AutoPurge()
-	go cacheUDP.AutoPurge()
+	go cacheTCP.Flush()
+	go cacheUDP.Flush()
 
 	// denySvc := denylist.NewService(nil)
 

@@ -14,7 +14,7 @@ func NewDNSParser() proxy.DNSParser {
 	return &dnsParser{}
 }
 
-func (mp *dnsParser) DNSToMsg(dnsm *dnsmessage.Message, protocol string) ([]byte, error) {
+func (p *dnsParser) DNSToMsg(dnsm *dnsmessage.Message, protocol string) ([]byte, error) {
 	message, err := dnsm.Pack()
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (mp *dnsParser) DNSToMsg(dnsm *dnsmessage.Message, protocol string) ([]byte
 	}
 }
 
-func (mp *dnsParser) UDPMsgToDNS(m []byte) (*dnsmessage.Message, error) {
+func (p *dnsParser) UDPMsgToDNS(m []byte) (*dnsmessage.Message, error) {
 	var dnsm dnsmessage.Message
 	err := dnsm.Unpack(m[:])
 	if err != nil {
@@ -49,7 +49,7 @@ func (mp *dnsParser) UDPMsgToDNS(m []byte) (*dnsmessage.Message, error) {
 	return &dnsm, nil
 }
 
-func (mp *dnsParser) TCPMsgToDNS(m []byte) (*dnsmessage.Message, error) {
+func (p *dnsParser) TCPMsgToDNS(m []byte) (*dnsmessage.Message, error) {
 	var dnsm dnsmessage.Message
 	// Unpack the mesage starting from the second position.
 	err := dnsm.Unpack(m[2:])

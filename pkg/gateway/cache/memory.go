@@ -33,7 +33,7 @@ func New(ttl time.Duration, logger proxy.Logger, enabled bool) proxy.Cache {
 	return cache
 }
 
-func (c *Cache) AutoPurge() {
+func (c *Cache) Flush() {
 	for now := range time.Tick(time.Second) {
 		for key, value := range c.items {
 			if value.expiration.Before(now) {
