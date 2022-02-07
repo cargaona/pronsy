@@ -11,13 +11,14 @@ Google.
     - [Design](#The-Design)
     - [UDP and TCP handlers](#UDP-and-TCP-concurrent-handlers-with-Bonus-Features)  
         - [Testing the UDP resolution](#Testing-the-UDP-resolution)
+    - [Resolver](#The-Resolver) 
     - [Cache](#Cache---Bonus-Feature)
     - [Denylist and API](#Denylist-with-REST-API---Bonus-Feature)
     - [Logger](#Logger---Bonus-Feature) 
 - [Challenge Questions](#Challenge-Questions)
 ## Test it yourself! 
 
-```sh
+```bash
 ## build and run it using docker
 make docker-build && make docker-run
 
@@ -183,7 +184,7 @@ This feature was not fully developed because of time reasons.
 
 The domain package can be found with the interfaces needed to start this
 service. Also a not fully developed Rest API to manage the denylist with
-methods like `AddDomain`, `GetDomain`, `DeleteDomain` or `GetDomains` it's in
+methods like `AddDomain`, `GetDomain`, `DeleteDomain` or `GetDomains` is in
 the codebase but it's not being used. The API is initialized but only answer to
 `GET /ping`. 
 
@@ -206,7 +207,7 @@ messages in three different levels:
 A useful implementation could be the integration with a 3rd party log service
 such as AWS CloudWatch or any other custom service. It is possible (and
 desirable, from my perspective) to write all the code and inject the dependency
-to the packages to start loging to CloudWatch without modifying the domain of
+to the packages to start logging to CloudWatch without modifying the domain of
 our application. 
                                         
 If I were to give a solution for a production environment running multiple
@@ -230,10 +231,10 @@ DNS/TLS Provider.
 
 ### How would you integrate that solution in a distributed, microservices-oriented and containerized architecture?
 
-I have, at least, two approaches, with its trade offs and concerns.  
+I have, at least, two approaches, with their trade offs and concerns.  
 
-One of them is to deploy it as a service with all the replicas needed
-behind an internal load balancer and make it available for other services within a
+One of them is to deploy it as a service with all the replicas needed behind an
+internal load balancer and make it available for other services within a
 private network. In AWS it can be configured as a DNS Server for a VPC
 enforcing all the hosts of that network to use it. 
 
@@ -272,4 +273,12 @@ endpoints, Prometheus style, to feed dashboards to quickly see how many
 petitions are solved successfully, how many of them failed, why do they failed,
 the most petitioned domains, cache metrics, blocked domains metrics and so on. 
 
+Tha ability to talk with more than one DNS Provider. Maybe add a 'secondary'
+DNS as a fallback. 
+
+Regarding private domains, and in addition to the previous feature, it would be
+nice to be able to define rules for routing certain domains to certain providers.
+That way I could set up the DNS Proxy to resolve all the *.mycompany.net
+internal domains to an internal DNS and avoid sending them to a provider like
+CloudFlare or Google that won't be able to solve my domain. 
 
